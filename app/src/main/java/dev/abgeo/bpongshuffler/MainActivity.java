@@ -4,7 +4,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,10 +18,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -68,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             edit.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    Toast.makeText(MainActivity.this, "Edit In Development", Toast.LENGTH_LONG).show();
+                    addOrEditTeam(teamsList.get(acmi.position));
 
                     return true;
                 }
@@ -126,28 +123,39 @@ public class MainActivity extends AppCompatActivity {
         addTeamFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addNewTeam();
+                addOrEditTeam(null);
             }
         });
     }
 
     /**
-     * Show Alert Dialog for adding new team.
+     * Show Alert Dialog for adding or editing team.
      */
-    private void addNewTeam() {
+    private void addOrEditTeam(final String oldName) {
+        final boolean isNew = null == oldName;
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add new Team");
+        builder.setTitle(isNew ? "Add new Team" : "Edit Team " + oldName);
 
         final EditText teamName = new EditText(this);
         teamName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+        teamName.setText(oldName);
         builder.setView(teamName);
 
-        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(isNew ? "Add" : "Save", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: Validate on empty string.
-                String text = teamName.getText().toString();
-                teamsList.add(text);
+                // TODO: Validate on unique value.
+                String name = teamName.getText().toString();
+
+                if (isNew) {
+                    teamsList.add(name);
+                } else {
+                    int index = teamsList.indexOf(oldName);
+                    teamsList.set(index, name);
+                }
+
                 teamsArrayAdapter.notifyDataSetChanged();
             }
         });
