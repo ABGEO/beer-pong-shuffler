@@ -22,6 +22,7 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import dev.abgeo.bpongshuffler.R;
 
@@ -95,6 +96,18 @@ public class MainActivity extends AppCompatActivity {
         if (R.id.action_clear == id) {
             teamsList.clear();
             teamsArrayAdapter.notifyDataSetChanged();
+
+            return true;
+        }
+
+        if (R.id.action_shuffle == id) {
+            String result = shuffleTeams();
+
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.shuffle_result))
+                    .setMessage(Html.fromHtml(result))
+                    .setPositiveButton(getString(R.string.ok), null)
+                    .show();
 
             return true;
         }
@@ -198,5 +211,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * Shuffle teams and get schedule.
+     *
+     * @return Formatted schedule.
+     */
+    private String shuffleTeams() {
+        StringBuilder result = new StringBuilder();
+        List<String> teams = new ArrayList<>(teamsList);
+        int n = teams.size();
+
+        for (int i = 0; i < n / 2; i++) {
+            StringBuilder item = new StringBuilder();
+            for (int j = 0; j < 2; j++) {
+                int index = new Random().nextInt(teams.size());
+                String currentTeam = teams.get(index);
+
+                if (0 == j) {
+                    item = item.append("<p>").append(currentTeam);
+                } else {
+                    item.append(" <b>VS</b> ").append(currentTeam).append("</p>");
+                }
+
+                teams.remove(index);
+            }
+
+            result.append(item.toString());
+        }
+
+        if (!teams.isEmpty()) {
+            String team = teams.get(0);
+            result.append("<p>").append("Standalone Team: ").append(team).append("</p>");
+        }
+
+        return result.toString();
     }
 }
