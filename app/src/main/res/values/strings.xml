@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BPong Shuffler</string>
+    <string name="action_clear">Clear</string>
+</resources>
