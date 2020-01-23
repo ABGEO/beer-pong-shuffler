@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">BPong Shuffler</string>
     <string name="action_clear">Clear</string>
+    <string name="validation_team_name_is_empty">Please, Enter the Team name!</string>
+    <string name="validation_team_already_exists">Team "%1$s" already exists!</string>
+    <string name="edit">Edit</string>
+    <string name="remove">Remove</string>
+    <string name="add_new_team">Add new Team</string>
+    <string name="edit_team">Edit Team "%1$s"</string>
+    <string name="add">Add</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>

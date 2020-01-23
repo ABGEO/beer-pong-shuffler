@@ -1,6 +1,5 @@
 package dev.abgeo.bpongshuffler;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -16,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
         if (R.id.teams_list == v.getId()) {
             final AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
-            MenuItem edit = menu.add("Edit");
-            MenuItem remove = menu.add("Remove");
+            MenuItem edit = menu.add(R.string.edit);
+            MenuItem remove = menu.add(R.string.remove);
 
             edit.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
@@ -134,39 +134,56 @@ public class MainActivity extends AppCompatActivity {
     private void addOrEditTeam(final String oldName) {
         final boolean isNew = null == oldName;
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(isNew ? "Add new Team" : "Edit Team " + oldName);
-
         final EditText teamName = new EditText(this);
         teamName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
         teamName.setText(oldName);
-        builder.setView(teamName);
 
-        builder.setPositiveButton(isNew ? "Add" : "Save", new DialogInterface.OnClickListener() {
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(
+                        isNew ? getString(R.string.add_new_team)
+                                : getString(R.string.edit_team, oldName)
+                )
+                .setView(teamName)
+                .setPositiveButton(
+                        isNew ? getString(R.string.add) : getString(R.string.save), null
+                )
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show();
+
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO: Validate on empty string.
-                // TODO: Validate on unique value.
+            public void onClick(View v) {
+                teamName.setError(null);
                 String name = teamName.getText().toString();
+                boolean isValid = true;
 
-                if (isNew) {
-                    teamsList.add(name);
-                } else {
-                    int index = teamsList.indexOf(oldName);
-                    teamsList.set(index, name);
+                if (name.isEmpty()) {
+                    teamName.setError(getResources().getString(R.string.validation_team_name_is_empty));
+                    isValid = false;
                 }
 
-                teamsArrayAdapter.notifyDataSetChanged();
+                if (
+                    -1 != teamsList.indexOf(name)
+                    && teamsList.indexOf(oldName) != teamsList.indexOf(name)
+                ) {
+                    teamName.setError(getString(R.string.validation_team_already_exists, name));
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    if (isNew) {
+                        teamsList.add(name);
+                    } else {
+                        int index = teamsList.indexOf(oldName);
+                        teamsList.set(index, name);
+                    }
+
+                    teamsArrayAdapter.notifyDataSetChanged();
+
+                    dialog.dismiss();
+                }
             }
         });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
     }
 }
