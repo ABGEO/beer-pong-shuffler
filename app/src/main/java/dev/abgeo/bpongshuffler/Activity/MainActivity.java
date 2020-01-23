@@ -1,4 +1,4 @@
-package dev.abgeo.bpongshuffler;
+package dev.abgeo.bpongshuffler.Activity;
 
 import android.os.Bundle;
 
@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.text.Html;
 import android.text.InputType;
 import android.view.ContextMenu;
 import android.view.View;
@@ -21,6 +22,8 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import dev.abgeo.bpongshuffler.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -92,6 +95,16 @@ public class MainActivity extends AppCompatActivity {
         if (R.id.action_clear == id) {
             teamsList.clear();
             teamsArrayAdapter.notifyDataSetChanged();
+
+            return true;
+        }
+
+        if (R.id.action_about == id) {
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.about))
+                    .setMessage(Html.fromHtml(getString(R.string.about_text)))
+                    .setPositiveButton(getString(R.string.ok), null)
+                    .show();
 
             return true;
         }
