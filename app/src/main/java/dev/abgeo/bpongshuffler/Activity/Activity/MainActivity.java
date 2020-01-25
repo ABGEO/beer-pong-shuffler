@@ -1,41 +1,45 @@
-package dev.abgeo.bpongshuffler.Activity;
+package dev.abgeo.bpongshuffler.Activity.Activity;
 
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import android.text.Html;
 import android.text.InputType;
-import android.view.ContextMenu;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import dev.abgeo.bpongshuffler.Activity.Adapter.TeamsListAdapter;
 import dev.abgeo.bpongshuffler.R;
 
 public class MainActivity extends AppCompatActivity {
 
     // Components.
-    Toolbar toolbar;
-    ListView teamsListView;
+    SwipeMenuListView teamsListView;
+    TextView teamsListViewEmptyText;
     FloatingActionButton addTeamFAB;
+    ImageButton clearBTN;
+    ImageButton shuffleBTN;
 
     // Objects.
-    List<String> teamsList;
-    ArrayAdapter<String> teamsArrayAdapter;
+    ArrayList<String> teamsList;
+    TeamsListAdapter teamsListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,92 +50,49 @@ public class MainActivity extends AppCompatActivity {
         initializeObjects();
         initializeEvents();
 
-        setSupportActionBar(toolbar);
-        registerForContextMenu(teamsListView);
+        teamsListView.setAdapter(teamsListAdapter);
+        teamsListView.setEmptyView(teamsListViewEmptyText);
+        teamsListView.setMenuCreator(swapMenuCreator);
 
-        teamsListView.setAdapter(teamsArrayAdapter);
+        shuffleBTN.setVisibility(View.INVISIBLE);
+        clearBTN.setVisibility(View.INVISIBLE);
+
+        teamsList.add("Team 1");
+        teamsList.add("Team 2");
+        teamsList.add("Team 3");
+        teamsList.add("Team 4");
+        teamsList.add("Team 5");
+
+        onTeamListUpdate();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    SwipeMenuCreator swapMenuCreator = new SwipeMenuCreator() {
+        @Override
+        public void create(SwipeMenu menu) {
+            SwipeMenuItem editItem = new SwipeMenuItem(getApplicationContext());
+            editItem.setBackground(new ColorDrawable(getResources().getColor(R.color.colorSuccess)));
+            editItem.setWidth(150);
+            editItem.setIcon(R.drawable.ic_edit_24dp);
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        if (R.id.teams_list == v.getId()) {
-            final AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            SwipeMenuItem deleteItem = new SwipeMenuItem(getApplicationContext());
+            deleteItem.setBackground(new ColorDrawable(getResources().getColor(R.color.colorDanger)));
+            deleteItem.setWidth(150);
+            deleteItem.setIcon(R.drawable.ic_delete_24dp);
 
-            MenuItem edit = menu.add(R.string.edit);
-            MenuItem remove = menu.add(R.string.remove);
-
-            edit.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    addOrEditTeam(teamsList.get(acmi.position));
-
-                    return true;
-                }
-            });
-
-            remove.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    teamsList.remove(acmi.position);
-                    teamsArrayAdapter.notifyDataSetChanged();
-
-                    return true;
-                }
-            });
+            menu.addMenuItem(editItem);
+            menu.addMenuItem(deleteItem);
         }
-
-        super.onCreateContextMenu(menu, v, menuInfo);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (R.id.action_clear == id) {
-            teamsList.clear();
-            teamsArrayAdapter.notifyDataSetChanged();
-
-            return true;
-        }
-
-        if (R.id.action_shuffle == id) {
-            String result = shuffleTeams();
-
-            new AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.shuffle_result))
-                    .setMessage(Html.fromHtml(result))
-                    .setPositiveButton(getString(R.string.ok), null)
-                    .show();
-
-            return true;
-        }
-
-        if (R.id.action_about == id) {
-            new AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.about))
-                    .setMessage(Html.fromHtml(getString(R.string.about_text)))
-                    .setPositiveButton(getString(R.string.ok), null)
-                    .show();
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+    };
 
     /**
      * Initialize activity components.
      */
     private void initializeComponents() {
-        toolbar = findViewById(R.id.toolbar);
         teamsListView = findViewById(R.id.teams_list);
+        teamsListViewEmptyText = findViewById(R.id.teams_list_empty_text);
         addTeamFAB = findViewById(R.id.add_team);
+        clearBTN = findViewById(R.id.btn_clear);
+        shuffleBTN = findViewById(R.id.btn_shuffle);
     }
 
     /**
@@ -139,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initializeObjects() {
         teamsList = new ArrayList<>();
-        teamsArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, teamsList);
+        teamsListAdapter = new TeamsListAdapter(this, teamsList);
     }
 
     /**
@@ -150,6 +111,52 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 addOrEditTeam(null);
+            }
+        });
+
+        teamsListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        addOrEditTeam(teamsList.get(position));
+                        break;
+                    case 1:
+                        teamsList.remove(position);
+                        onTeamListUpdate();
+                        break;
+                }
+
+                return false;
+            }
+        });
+
+        teamsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                teamsListView.smoothOpenMenu(position);
+                return false;
+            }
+        });
+
+        clearBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                teamsList.clear();
+                onTeamListUpdate();
+            }
+        });
+
+        shuffleBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String result = shuffleTeams();
+
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(getString(R.string.shuffle_result))
+                        .setMessage(Html.fromHtml(result))
+                        .setPositiveButton(getString(R.string.ok), null)
+                        .show();
             }
         });
     }
@@ -205,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                         teamsList.set(index, name);
                     }
 
-                    teamsArrayAdapter.notifyDataSetChanged();
+                    onTeamListUpdate();
 
                     dialog.dismiss();
                 }
@@ -247,5 +254,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return result.toString();
+    }
+
+    /**
+     * Actions when data is changed.
+     */
+    private void onTeamListUpdate() {
+        int teamsCount = teamsList.size();
+
+        if (0 == teamsCount) {
+            shuffleBTN.setVisibility(View.INVISIBLE);
+            clearBTN.setVisibility(View.INVISIBLE);
+        } else if (1 == teamsCount) {
+            shuffleBTN.setVisibility(View.INVISIBLE);
+            clearBTN.setVisibility(View.VISIBLE);
+        } else {
+            shuffleBTN.setVisibility(View.VISIBLE);
+            clearBTN.setVisibility(View.VISIBLE);
+        }
+
+        teamsListAdapter.notifyDataSetChanged();
     }
 }
